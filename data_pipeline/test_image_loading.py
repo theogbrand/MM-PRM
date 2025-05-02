@@ -79,9 +79,9 @@ def run_test():
 
     # Construct the prompt using the format from OmegaPRM AND llm_utils parsing needs
     prompt = (
-        f"You are given an image and a question. Your task is to answer the question based on the image provided. "
-        f"First reason about the context provided in the image step-by-step between <perception> tags, then provide your reasoning step-by-step between <step> tags before answering the question. "
-        f"Once you are done reasoning, provide the final answer between <answer> tags, starting with 'The final answer is ..'.\n\n"
+        f"You are given an image. Your task is to answer the question based on the image provided. "
+        f"Think step-by-step between <step> tags"
+        f"Once you are done thinking, provide the final answer between <answer> tags, starting with 'The final answer is ..'.\n\n"
         f"Question: {question_text}\n"
     )
 
@@ -116,7 +116,7 @@ def run_test():
 
         logger.info("Calling generate_results...")
         # Pass the formatted path (which might be None)
-        results = lm.generate_results(prompt=prompt, image_path=formatted_image_path, num_copies=4) # Use num_copies=1 for testing
+        results = lm.generate_results(prompt=prompt, image_path=formatted_image_path, num_copies=16) # Use num_copies=1 for testing
         logger.info("generate_results finished.")
         logger.info(f"Results: {results}")
 
