@@ -1,5 +1,6 @@
 import logging
 import re
+from PIL import Image
 
 from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
@@ -18,6 +19,7 @@ class LanguageModel:
         top_p=0.9,
     ):
         self.model = model
+        self.model_name = model  # preserve original model identifier
         self.max_new_tokens = max_new_tokens
         self.temperature = temperature
         self.top_k = top_k
@@ -46,23 +48,62 @@ class LanguageModel:
         logger.info('Model loaded successfully.')
 
     def generate_results(self, prompt, image_path=None, num_copies=16):
-        if '<image>' not in prompt:
-            prompt = '<image>\n' + prompt
+        # # Qwen2.5-VL specific branch
+        # if 'Qwen2.5-VL' in self.model_name:
+        #     from vllm import EngineArgs, SamplingParams
+        #     from dataclasses import asdict
+        #     # configure engine args as per run_qwen2_5_vl
+        #     engine_args = EngineArgs(
+        #         model=self.model_name,
+        #         max_model_len=self.max_new_tokens,
+        #         max_num_seqs=num_copies,
+        #         mm_processor_kwargs={
+        #             "min_pixels": 28 * 28,
+        #             "max_pixels": 1280 * 28 * 28,
+        #             "fps": 1,
+        #         },
+        #         limit_mm_per_prompt={"image": 1},
+        #     )
+        #     llm = LLM(**asdict(engine_args))
+            
+        #     # build batch inputs
+        #     inputs = []
+        #     if image_path:
+        #         img = 
+        #         for _ in range(num_copies):
+        #             inputs.append({"prompt": sys_msg + user_msg, "multi_modal_data": {"image": img}})
+        #     else:
+        #         for _ in range(num_copies):
+        #             inputs.append({"prompt": sys_msg + user_msg})
+        #     sampling = SamplingParams(temperature=self.temperature, max_tokens=self.max_new_tokens)
+        #     outputs = llm.generate(inputs, sampling_params=sampling)
+        #     return [o.outputs[0].text for o in outputs]
+        if '<|image_pad|>' not in prompt:
+            prompt = '<|vision_start|><|image_pad|><|vision_end|>' + prompt
+
+        # placeholder = "<|image_pad|>"
+        # sys_msg = "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n"
+        # user_msg = f"<|im_start|>user\n<|vision_start|>{placeholder}<|vision_end|>{prompt}<|im_end|>\n<|im_start|>assistant\n"
 
         messages = [
-            {
-                'role': 'system',
-                'content': '你是书生·万象，英文名是InternVL，是由上海人工智能实验室、清华大学及多家合作单位联合开发的多模态大语言模型。',
-            },
+            # {
+            #     'role': 'system',
+            #     'content': '你是书生·万象，英文名是InternVL，是由上海人工智能实验室、清华大学及多家合作单位联合开发的多模态大语言模型。',
+            # },
             {'role': 'user', 'content': prompt},
         ]
         prompt = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
 
+        print()
+        print("prompt after applying chat template:")
+        print(prompt)
+        print()
+
         inputs = []
         if image_path:
-            image = fetch_image('file://' + image_path, allowed_local_media_path='/')
+            image = Image.open(image_path)
             for _ in range(num_copies):
                 inputs.append(
                     {
@@ -71,8 +112,9 @@ class LanguageModel:
                     }
                 )
         else:
-            for _ in range(num_copies):
-                inputs.append({'prompt': prompt})
+            raise ValueError("Image path is required for multi-modal generation.")
+            # for _ in range(num_copies):
+            #     inputs.append({'prompt': prompt})
 
         sampling_params = SamplingParams(
             temperature=self.temperature,
