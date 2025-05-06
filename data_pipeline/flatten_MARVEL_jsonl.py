@@ -56,7 +56,7 @@ def flatten_json_to_jsonl(input_pattern: str, output_path: str, limit: int = Non
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Flatten JSON label files into a JSONL.')
     parser.add_argument('--input-pattern', '-i', default='/mnt/weka/aisg/ob1/raw_datasets/MARVEL_AVR/Json_data/*/*_label.json', help='Glob pattern for input JSON files.')
-    parser.add_argument('--output-file', '-o', default='/mnt/weka/aisg/ob1/MM-PRM/formatted_data/MARVEL_AVR/MARVEL_AVR_flattened_100.jsonl', help='Path to output JSONL file.')
+    parser.add_argument('--output-file', '-o', default='/mnt/weka/aisg/ob1/MM-PRM/formatted_data/MARVEL_AVR/MARVEL_AVR_flattened_full.jsonl', help='Path to output JSONL file.')
     parser.add_argument('--limit', '-n', type=int, default=None, help='Optional max number of files to process sequentially by ID.')
     args = parser.parse_args()
     flatten_json_to_jsonl(args.input_pattern, args.output_file, args.limit) 
